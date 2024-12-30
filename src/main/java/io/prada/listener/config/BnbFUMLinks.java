@@ -6,4 +6,6 @@ public interface BnbFUMLinks {
     String listenKey = "fapi/v1/listenKey";
 
     String header = "X-MBX-APIKEY";
+
+    String wss = "wss://fstream.binance.com/ws/";
 }

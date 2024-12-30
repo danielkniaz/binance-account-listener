@@ -10,7 +10,7 @@
   </parent>
   <groupId>io.prada</groupId>
   <artifactId>prada</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <name>prada</name>
 
   <properties>
@@ -22,6 +22,11 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.java-websocket</groupId>
+      <artifactId>Java-WebSocket</artifactId>
+      <version>1.6.0</version>
+    </dependency>
 
     <dependency>
       <groupId>org.projectlombok</groupId>

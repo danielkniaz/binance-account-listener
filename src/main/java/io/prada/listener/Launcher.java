@@ -1,6 +1,6 @@
 package io.prada.listener;
 
-import io.prada.listener.service.ListenKeyHolder;
+import io.prada.listener.service.UMFWebsocketClientImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class Launcher {
-    private final ListenKeyHolder holder;
+    private final UMFWebsocketClientImpl websocketClient;
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
-        String key = holder.generateListenKey();
-        log.debug("listen key = {}", key);
+        websocketClient.connect();
+        log.debug("connected!");
     }
 }
