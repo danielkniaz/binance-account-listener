@@ -1,0 +1,15 @@
+logging:
+  level:
+    root: INFO
+    io.prada.listener: DEBUG
+
+server:
+  port: 8070
+
+spring:
+  application:
+    name: "listener"
+
+bnb-config:
+  publicKey: "BNB_PUBLIC_KEY"
+  privateKey: "BNB_API_KEY"
