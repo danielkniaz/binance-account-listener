@@ -9,6 +9,26 @@ server:
 spring:
   application:
     name: "listener"
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/publicdb"
+    username: "admin"
+    password: "password"
+    driver-class-name: org.postgresql.Driver
+#    hikari:
+#      minimum-idle: 1
+#      maximum-pool-size: 1
+#      max-lifetime: 300000
+#      idle-timeout: 295000
+#      pool-name: bnb-chatBot
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate.ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: false
+#    locations: classpath:db/migration
+#    baseline-on-migrate: true
+#    validate-on-migrate: false
 
 bnb-config:
   publicKey: "BNB_PUBLIC_KEY"

@@ -3,6 +3,8 @@ package io.prada.listener.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.prada.listener.repository.EventRepository;
+import io.prada.listener.repository.model.EventEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -23,6 +25,7 @@ public class TimeWindowEventProcessor {
     private static final String EVENTS = "events";
 
     private final ObjectMapper mapper;
+    private final EventRepository eventRepository;
 
     private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -31,6 +34,7 @@ public class TimeWindowEventProcessor {
     public void onMessage(String message) {
         log.info("adding message to queue {}", message);
         messageQueue.add(message);
+        eventRepository.save(new EventEntity().setData(message));
         if (processingScheduled.compareAndSet(false, true)) {
             executor.schedule(this::batch, WINDOW_MS, TimeUnit.MILLISECONDS);
         }
