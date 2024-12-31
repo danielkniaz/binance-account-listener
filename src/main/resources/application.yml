@@ -3,6 +3,10 @@ logging:
     root: INFO
     io.prada.listener: DEBUG
 
+settings:
+  logs:
+    bnb-events: true
+
 server:
   port: 8070
 

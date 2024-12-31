@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,10 +32,15 @@ public class TimeWindowEventProcessor {
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final AtomicBoolean processingScheduled = new AtomicBoolean(false);
 
+    @Value("${settings.logs.bnb-events}")
+    private boolean logEvents;
+
     public void onMessage(String message) {
         log.info("adding message to queue {}", message);
         messageQueue.add(message);
-        eventRepository.save(new EventEntity().setData(message));
+        if (logEvents) {
+            eventRepository.save(new EventEntity().setData(message));
+        }
         if (processingScheduled.compareAndSet(false, true)) {
             executor.schedule(this::batch, WINDOW_MS, TimeUnit.MILLISECONDS);
         }
