@@ -22,7 +22,7 @@ import org.hibernate.type.SqlTypes;
 @Setter @Accessors(chain = true)
 @ToString
 @Entity
-@Table(name = "account_info")
+@Table(name = "trade_info")
 public class TradeInfoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

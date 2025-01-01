@@ -1,5 +1,5 @@
 CREATE TABLE if not exists
-    account_info
+    trade_info
 (
     id SERIAL primary key ,
     created bigint not null,
