@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.prada.listener.repository.EventRepository;
 import io.prada.listener.repository.model.EventEntity;
+import io.prada.listener.service.SkipEventService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -27,6 +28,7 @@ public class TimeWindowEventProcessor {
 
     private final ObjectMapper mapper;
     private final EventRepository eventRepository;
+    private final SkipEventService skipEventService;
 
     private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -36,7 +38,11 @@ public class TimeWindowEventProcessor {
     private boolean logEvents;
 
     public void onMessage(String message) {
-        log.info("adding message to queue {}", message);
+        boolean importantEvent = skipEventService.isImportantEvent(message);
+        log.info("adding message to queue(?={}) {}.", importantEvent, message);
+        if (!importantEvent) {
+            return;
+        }
         messageQueue.add(message);
         if (logEvents) {
             eventRepository.save(new EventEntity().setData(message));

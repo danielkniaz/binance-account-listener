@@ -9,7 +9,7 @@ import org.java_websocket.handshake.ServerHandshake;
 
 @Slf4j
 public class UMFWebsocketClientImpl extends WebSocketClient {
-    private static final String HAND_SHAKE = "onOpen";
+    public static final String HAND_SHAKE = "onOpen";
     private final TimeWindowEventProcessor processor;
 
     public UMFWebsocketClientImpl(String url, TimeWindowEventProcessor processor) {
