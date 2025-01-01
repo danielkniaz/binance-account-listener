@@ -4,8 +4,10 @@ logging:
     io.prada.listener: DEBUG
 
 settings:
+  use-position-request: true
   logs:
     bnb-events: true
+    bnb-responses: true
 
 server:
   port: 8070

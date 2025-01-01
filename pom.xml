@@ -10,7 +10,7 @@
   </parent>
   <groupId>io.prada</groupId>
   <artifactId>prada</artifactId>
-  <version>0.0.4-SNAPSHOT</version>
+  <version>0.0.5-SNAPSHOT</version>
   <name>prada</name>
 
   <properties>
