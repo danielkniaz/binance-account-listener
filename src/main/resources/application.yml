@@ -2,6 +2,7 @@ logging:
   level:
     root: INFO
     io.prada.listener: DEBUG
+    org.apache.coyote.http11: WARN
 
 settings:
   use-position-request: true

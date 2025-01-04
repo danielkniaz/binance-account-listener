@@ -36,6 +36,7 @@ public class EventDetectionService {
             now = builder.build(input);
             if (isOnConnect(messages)) {
                 log.debug("skipping initial message");
+                this.snapshot = now;
                 return;
             }
             List<Signal> signals = processor.diff(now, snapshot);

@@ -2,6 +2,7 @@ package io.prada.listener.dto.accounting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,7 @@ public class AccountingConsolidatedSymbolInfo {
 
     public AccountingConsolidatedSymbolInfo(AccountingConsolidatedSymbolInfo other) {
         this.symbol = other.getSymbol();
-        this.position = new AccountingPosition(other.position);
+        this.position = Optional.ofNullable(other.getPosition()).map(AccountingPosition::new).orElse(null);
         this.orders = other.getOrders().stream().map(AccountingOrder::new).collect(Collectors.toList());
     }
 }
