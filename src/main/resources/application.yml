@@ -5,6 +5,7 @@ logging:
 
 settings:
   use-position-request: true
+  balanceType: "BALANCE"
   logs:
     bnb-events: true
     bnb-responses: true
@@ -27,7 +28,7 @@ spring:
 #      idle-timeout: 295000
 #      pool-name: bnb-chatBot
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate.ddl-auto: none
     open-in-view: false
   flyway:

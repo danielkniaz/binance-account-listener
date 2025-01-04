@@ -28,10 +28,6 @@ public class ListenKeyHolder {
 
     private String key;
 
-    public boolean isKey() { //TODO: rm
-        return Objects.nonNull(key);
-    }
-
     public String generateListenKey() {
         if (Objects.isNull(key)) {
             key = requestKey();

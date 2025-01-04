@@ -1,5 +1,6 @@
 package io.prada.listener.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.prada.listener.processor.TimeWindowEventProcessor;
 import java.net.URI;
@@ -9,12 +10,16 @@ import org.java_websocket.handshake.ServerHandshake;
 
 @Slf4j
 public class UMFWebsocketClientImpl extends WebSocketClient {
-    public static final String HAND_SHAKE = "onOpen";
+    private static final String HAND_SHAKE = "onOpen";
     private final TimeWindowEventProcessor processor;
 
     public UMFWebsocketClientImpl(String url, TimeWindowEventProcessor processor) {
         super(URI.create(url));
         this.processor = processor;
+    }
+
+    public static boolean isOpen(JsonNode jsonNode) {
+        return jsonNode.get(UMFWebsocketClientImpl.HAND_SHAKE) != null;
     }
 
     @Override
