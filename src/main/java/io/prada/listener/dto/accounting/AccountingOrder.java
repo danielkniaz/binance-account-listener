@@ -52,7 +52,6 @@ public class AccountingOrder {
         this.executedQty = new BigDecimal(node.get("executedQty").asText(), ctx);
         this.cumulativeQty = new BigDecimal(node.get("cumQuote").asText(), ctx);
         this.timeInForce = node.get("timeInForce").asText();
-        this.cumulativeQty = new BigDecimal(node.get("avgPrice").asText(), ctx);
         this.type = node.get("type").asText();
         this.reduceOnly = node.get("reduceOnly").asBoolean();
         this.closePosition = node.get("closePosition").asBoolean();
@@ -110,6 +109,5 @@ public class AccountingOrder {
         this.goodTillDate = other.getGoodTillDate();
         this.time = other.getTime();
         this.updateTime = other.getUpdateTime();
-
     }
 }

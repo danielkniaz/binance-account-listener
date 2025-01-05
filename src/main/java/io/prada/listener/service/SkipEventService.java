@@ -24,7 +24,7 @@ public class SkipEventService {
     public boolean isImportantEvent(String message) {
         try {
             JsonNode node = mapper.readTree(message);
-            return !isFundingFee(node); // && !UMFWebsocketClientImpl.isOpen(node);
+            return !isFundingFee(node);
         } catch (JsonProcessingException e) {
             log.warn("failed to parse {} as json", message, e);
             return true;
