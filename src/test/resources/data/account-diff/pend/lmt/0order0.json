@@ -1,0 +1,30 @@
+{
+  "ORDER": [
+    {
+      "orderId": 37180303682,
+      "symbol": "CRVUSDT",
+      "status": "NEW",
+      "clientOrderId": "android_cfI8u2Xi0Uu5yBwIB2Uz",
+      "price": "0.336",
+      "avgPrice": "0",
+      "origQty": "29.7",
+      "executedQty": "0",
+      "cumQuote": "0.0000",
+      "timeInForce": "GTC",
+      "type": "LIMIT",
+      "reduceOnly": false,
+      "closePosition": false,
+      "side": "BUY",
+      "positionSide": "BOTH",
+      "stopPrice": "0",
+      "workingType": "CONTRACT_PRICE",
+      "priceProtect": false,
+      "origType": "LIMIT",
+      "priceMatch": "NONE",
+      "selfTradePreventionMode": "NONE",
+      "goodTillDate": 0,
+      "time": 1732175702496,
+      "updateTime": 1733481086537
+    }
+  ]
+}
