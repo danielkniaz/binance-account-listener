@@ -8,6 +8,7 @@ import io.prada.listener.repository.EventRepository;
 import io.prada.listener.repository.TradeInfoRepository;
 import io.prada.listener.repository.model.EventEntity;
 import io.prada.listener.repository.model.TradeInfoEntity;
+import io.prada.listener.service.EventDetectionService;
 import io.prada.listener.service.SkipEventService;
 import io.prada.listener.service.request.RequestType;
 import io.prada.listener.service.request.Requester;
@@ -31,13 +32,14 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TimeWindowEventProcessor {
     private static final Long WINDOW_MS = 1_000L;
-    private static final String EVENTS = "events";
+    public static final String EVENTS = "events";
 
     private final ObjectMapper mapper;
     private final EventRepository eventRepository;
     private final SkipEventService skipEventService;
     private final List<Requester> requesters;
     private final TradeInfoRepository tradeInfoRepository;
+    private final EventDetectionService eventDetectionService;
 
     private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -79,7 +81,9 @@ public class TimeWindowEventProcessor {
             return;
         }
         String mergedEvent = mergeEvents(events);
-        buildResponses(mergedEvent);
+        List<Pair<RequestType, ObjectNode>> responses = buildResponses(mergedEvent);
+        saveResponses(responses, mergedEvent);
+        eventDetectionService.analyze(responses, mergedEvent);
     }
 
     private List<String> drainQueue() {
@@ -103,19 +107,23 @@ public class TimeWindowEventProcessor {
         return mapper.createObjectNode().set(EVENTS, jsonNodes).toString();
     }
 
-    private List<TradeInfoEntity> buildResponses(String mergedEvent) {
+    private List<Pair<RequestType, ObjectNode>> buildResponses(String mergedEvent) {
         log.info("merged event={}", mergedEvent);
-        List<TradeInfoEntity> responses = requestersList().stream()
+        return requestersList().stream()
             .map(this::buildNode)
-            .filter(Objects::nonNull)
+            .filter(Objects::nonNull).toList();
+    }
+
+    private void saveResponses(List<Pair<RequestType, ObjectNode>> responses, String mergedEvent) {
+        List<TradeInfoEntity> logs = responses.stream()
             .map(pair -> buildLog(pair, mergedEvent))
             .filter(Objects::nonNull)
             .toList();
         if (logResponses) {
-            return tradeInfoRepository.saveAll(responses);
+            tradeInfoRepository.saveAll(logs);
+            return;
         }
-        responses.forEach(e -> log.info("entity={}", e));
-        return responses;
+        logs.forEach(e -> log.info("entity={}", e));
     }
 
     private List<Requester> requestersList() {

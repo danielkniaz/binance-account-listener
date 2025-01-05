@@ -1,0 +1,83 @@
+{
+  "BALANCE": {
+    "feeTier": 0,
+    "canTrade": true,
+    "canDeposit": true,
+    "canWithdraw": true,
+    "feeBurn": false,
+    "tradeGroupId": -1,
+    "updateTime": 0,
+    "multiAssetsMargin": false,
+    "totalInitialMargin": "3.94122636",
+    "totalMaintMargin": "1.18151067",
+    "totalWalletBalance": "274.69226690",
+    "totalUnrealizedProfit": "-9.54384266",
+    "totalMarginBalance": "265.14842424",
+    "totalPositionInitialMargin": "3.44226636",
+    "totalOpenOrderInitialMargin": "0.49896000",
+    "totalCrossWalletBalance": "274.69226690",
+    "totalCrossUnPnl": "-9.54384266",
+    "availableBalance": "261.20719788",
+    "maxWithdrawAmount": "261.20719788",
+    "assets": [
+      {
+        "asset": "USDT",
+        "walletBalance": "274.69226690",
+        "unrealizedProfit": "-9.54384266",
+        "marginBalance": "265.14842424",
+        "maintMargin": "1.18151067",
+        "initialMargin": "3.94122636",
+        "positionInitialMargin": "3.44226636",
+        "openOrderInitialMargin": "0.49896000",
+        "maxWithdrawAmount": "261.20719788",
+        "crossWalletBalance": "274.69226690",
+        "crossUnPnl": "-9.54384266",
+        "availableBalance": "261.20719788",
+        "marginAvailable": true,
+        "updateTime": 1733403918024
+      }
+    ],
+    "positions": [
+      {
+        "symbol": "LUNA2USDT",
+        "initialMargin": "0.97697936",
+        "maintMargin": "0.19539587",
+        "unrealizedProfit": "-0.15961266",
+        "positionInitialMargin": "0.97697936",
+        "openOrderInitialMargin": "0",
+        "leverage": "20",
+        "isolated": false,
+        "entryPrice": "0.7296",
+        "breakEvenPrice": "0.7299648",
+        "maxNotional": "100000",
+        "positionSide": "BOTH",
+        "positionAmt": "27",
+        "notional": "19.53958734",
+        "isolatedWallet": "0",
+        "updateTime": 1733322800850,
+        "bidNotional": "0",
+        "askNotional": "0"
+      },
+      {
+        "symbol": "LQTYUSDT",
+        "initialMargin": "2.46528700",
+        "maintMargin": "0.98611480",
+        "unrealizedProfit": "-9.38423000",
+        "positionInitialMargin": "2.46528700",
+        "openOrderInitialMargin": "0",
+        "leverage": "20",
+        "isolated": false,
+        "entryPrice": "1.473118450184",
+        "breakEvenPrice": "1.472381890959",
+        "maxNotional": "5000",
+        "positionSide": "BOTH",
+        "positionAmt": "-27.1",
+        "notional": "-49.30574000",
+        "isolatedWallet": "0",
+        "updateTime": 1732732105262,
+        "bidNotional": "0",
+        "askNotional": "0"
+      }
+    ]
+  }
+}
