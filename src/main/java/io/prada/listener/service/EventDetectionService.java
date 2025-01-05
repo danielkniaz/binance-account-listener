@@ -7,6 +7,7 @@ import io.prada.listener.dto.Signal;
 import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.processor.AccountDiffProcessor;
 import io.prada.listener.processor.TimeWindowEventProcessor;
+import io.prada.listener.service.publisher.MessagePublisher;
 import io.prada.listener.service.request.RequestType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class EventDetectionService {
     private final AccountingSnapshotBuilder builder;
     private final AccountDiffProcessor processor;
     private final SignalService signalService;
-    private final MessageProducer amqProducer;
+    private final List<MessagePublisher> publishers;
 
     private AccountingSnapshot snapshot;
 
@@ -44,7 +45,7 @@ public class EventDetectionService {
             signals = processor.suppress(signals);
             if (!signals.isEmpty()) {
                 signalService.process(signals);
-                sendSignals(signals);
+                signals.forEach(this::sendSignal);
             }
         } catch (Exception e) {
             log.warn("exception {}", e.getMessage(), e);
@@ -60,9 +61,11 @@ public class EventDetectionService {
     }
 
     @SneakyThrows
-    private void sendSignals(List<Signal> signals) {
-        for (Signal signal : signals) {
-            amqProducer.send(mapper.writeValueAsString(signal));
+    private void sendSignal(Signal signal) {
+        for (MessagePublisher publisher : publishers) {
+            if (publisher.isEnabled()) {
+                publisher.send(mapper.writeValueAsString(signal));
+            }
         }
     }
 }

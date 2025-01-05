@@ -4,12 +4,19 @@ logging:
     io.prada.listener: DEBUG
     org.apache.coyote.http11: WARN
     org.springframework.amqp: WARN
+
 settings:
   use-position-request: true
   balanceType: "BALANCE"
   logs:
     bnb-events: true
     bnb-responses: true
+  publisher:
+    amq: false
+    telegram: false
+telegram:
+  botToken: 123456:ABC-DEF1234ghIjk-zyx57W21qio9
+  chatId: -1001234567890
 
 server:
   port: 8070
