@@ -23,6 +23,7 @@ public class EventDetectionService {
     private final AccountingSnapshotBuilder builder;
     private final AccountDiffProcessor processor;
     private final SignalService signalService;
+    private final MessageProducer amqProducer;
 
     private AccountingSnapshot snapshot;
 
@@ -41,7 +42,10 @@ public class EventDetectionService {
             }
             List<Signal> signals = processor.diff(now, snapshot);
             signals = processor.suppress(signals);
-            signalService.process(signals);
+            if (!signals.isEmpty()) {
+                signalService.process(signals);
+                sendSignals(signals);
+            }
         } catch (Exception e) {
             log.warn("exception {}", e.getMessage(), e);
         } finally {
@@ -53,5 +57,12 @@ public class EventDetectionService {
     private boolean isOnConnect(String message) {
         ArrayNode json = (ArrayNode) mapper.readTree(message).get(TimeWindowEventProcessor.EVENTS);
         return json.size() == 1 && UMFWebsocketClientImpl.isOpen(json.get(0));
+    }
+
+    @SneakyThrows
+    private void sendSignals(List<Signal> signals) {
+        for (Signal signal : signals) {
+            amqProducer.send(mapper.writeValueAsString(signal));
+        }
     }
 }

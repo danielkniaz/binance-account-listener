@@ -32,6 +32,13 @@ spring:
 #    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate.ddl-auto: none
     open-in-view: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: password
+    virtual-host: vhost
+    template.default-receive-queue: main-topic
   flyway:
     enabled: false
 #    locations: classpath:db/migration
