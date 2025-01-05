@@ -8,14 +8,14 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
+//@RequiredArgsConstructor
+//@Slf4j
 public class Launcher {
-    private final UMFWebsocketClientImpl websocketClient;
+//    private final UMFWebsocketClientImpl websocketClient;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void init() {
-        websocketClient.connect();
-        log.debug("connected!");
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void init() {
+//        websocketClient.connect();
+//        log.debug("connected!");
+//    }
 }

@@ -37,6 +37,8 @@ public class AppConfig {
     @Bean
     public UMFWebsocketClientImpl umfWebsocketClient(ListenKeyHolder holder, TimeWindowEventProcessor processor) {
         String url = BnbFUMLinks.wss + holder.generateListenKey();
-        return new UMFWebsocketClientImpl(url, processor);
+        var result = new UMFWebsocketClientImpl(url, processor);
+        result.connect();
+        return result;
     }
 }
