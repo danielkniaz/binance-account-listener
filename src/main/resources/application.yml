@@ -3,7 +3,7 @@ logging:
     root: INFO
     io.prada.listener: DEBUG
     org.apache.coyote.http11: WARN
-
+    org.springframework.amqp: WARN
 settings:
   use-position-request: true
   balanceType: "BALANCE"
