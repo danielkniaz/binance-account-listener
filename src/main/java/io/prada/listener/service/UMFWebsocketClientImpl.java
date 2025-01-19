@@ -68,8 +68,9 @@ public class UMFWebsocketClientImpl extends WebSocketClient {
 
     private void retryConnect() {
         for (int i = 0; i < RETRY_ATTEMPTS; i ++) {
+            log.debug("reconnect attempt={}", i);
             try {
-                this.reconnectBlocking();
+                this.connectBlocking();
                 log.info("reconnected");
                 return;
             } catch (InterruptedException e) {
@@ -80,6 +81,7 @@ public class UMFWebsocketClientImpl extends WebSocketClient {
                 try {
                     Thread.sleep(RETRY_BACKOFF_MS);
                 } catch (InterruptedException ie) {
+                    log.error("ie exception in sleep...", e);
                     break;
                 }
             }

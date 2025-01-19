@@ -1,10 +1,9 @@
 package io.prada.listener.service.publisher;
 
 import io.prada.listener.config.TelegramConfig;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@ConditionalOnProperty(prefix = "settings.publisher", name = "telegram", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramPublisher implements MessagePublisher {
@@ -21,9 +21,6 @@ public class TelegramPublisher implements MessagePublisher {
 
     private final TelegramConfig config;
     private final RestTemplate restTemplate;
-    @Getter
-    @Value("${settings.publisher.telegram:false}")
-    private boolean enabled;
 
     @Override
     public void send(String message) {

@@ -63,9 +63,7 @@ public class EventDetectionService {
     @SneakyThrows
     private void sendSignal(Signal signal) {
         for (MessagePublisher publisher : publishers) {
-            if (publisher.isEnabled()) {
-                publisher.send(mapper.writeValueAsString(signal));
-            }
+            publisher.send(mapper.writeValueAsString(signal));
         }
     }
 }
