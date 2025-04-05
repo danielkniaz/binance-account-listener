@@ -3,7 +3,7 @@ package io.prada.listener.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.prada.listener.processor.TimeWindowEventProcessor;
 import io.prada.listener.service.ListenKeyHolder;
-import io.prada.listener.service.UMFWebsocketClientImpl;
+import io.prada.listener.service.UMFWSHolder;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.net.http.HttpClient;
@@ -35,10 +35,9 @@ public class AppConfig {
     }
 
     @Bean
-    public UMFWebsocketClientImpl umfWebsocketClient(ListenKeyHolder holder, TimeWindowEventProcessor processor) {
-        String url = BnbFUMLinks.wss + holder.generateListenKey();
-        var result = new UMFWebsocketClientImpl(url, processor);
-        result.connect();
+    public UMFWSHolder umfwsHolder(TimeWindowEventProcessor processor, ListenKeyHolder holder) {
+        UMFWSHolder result = new UMFWSHolder(processor, holder);
+        result.init();
         return result;
     }
 }
