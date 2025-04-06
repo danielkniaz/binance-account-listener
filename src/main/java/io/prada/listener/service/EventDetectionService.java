@@ -9,6 +9,7 @@ import io.prada.listener.processor.AccountDiffProcessor;
 import io.prada.listener.processor.TimeWindowEventProcessor;
 import io.prada.listener.service.publisher.MessagePublisher;
 import io.prada.listener.service.request.RequestType;
+import io.prada.listener.service.socket.UMFWebsocketClientImpl;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

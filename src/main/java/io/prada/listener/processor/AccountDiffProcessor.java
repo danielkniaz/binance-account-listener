@@ -99,9 +99,7 @@ public class AccountDiffProcessor {
             return Optional.of(signal.setAction(Action.NEW));
         } else if (now.size() < old.size()) {
             return Optional.of(signal.setAction(Action.KILL));
-        } else if (
-            pendingPrice(type, now.get(0)).compareTo(pendingPrice(type, old.get(0))) != 0
-        ) {
+        } else if (pendingPrice(type, now.get(0)).compareTo(pendingPrice(type, old.get(0))) != 0) {
             return Optional.of(signal.setAction(Action.MOVE));
         }
         return Optional.empty();

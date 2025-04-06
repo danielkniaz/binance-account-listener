@@ -20,7 +20,7 @@ public class TelegramPublisher implements MessagePublisher {
     private static final String URL = "https://api.telegram.org/bot%s/sendMessage";
 
     private final TelegramConfig config;
-    private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     public void send(String message) {
@@ -36,7 +36,7 @@ public class TelegramPublisher implements MessagePublisher {
             String response = restTemplate.postForObject(url, request, String.class);
             log.debug("response = {} for message = {}", response, message);
         } catch (Exception e) {
-            log.error("error sending message: ", e.getMessage(), e);
+            log.error("error sending message: {}", e.getMessage(), e);
         }
     }
 }

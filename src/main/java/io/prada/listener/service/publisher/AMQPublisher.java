@@ -18,8 +18,8 @@ public class AMQPublisher implements MessagePublisher  {
     private String topic;
 
     public void send(String message) {
-        try {log.info("message={}", message);
-//            template.convertAndSend(topic, message);
+        try {
+            template.convertAndSend(topic, message);
         } catch (Exception e) {
             log.error("error sending message: {}", e.getMessage(), e);
         }
