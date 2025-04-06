@@ -1,9 +1,9 @@
 package io.prada.listener.processor;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.prada.listener.dto.Signal;
-import io.prada.listener.dto.accounting.AccountingPosition;
 import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.dto.enums.Action;
 import io.prada.listener.dto.enums.BalanceType;
@@ -27,10 +27,11 @@ class AccountDiffProcessorTest {
     private static final String PREFIX = "data/account-diff/";
 
     final MathContext ctx = new MathContext(8, RoundingMode.HALF_EVEN);
-    final ObjectMapper mapper = new ObjectMapper();
+    final ObjectMapper mapper = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     final AccountDiffProcessor unit = new AccountDiffProcessor(
         new RiskCalculationService(ctx, TestFileUtils.appSettings(BalanceType.BALANCE)), ctx);
-    final AccountingSnapshotBuilder builder = new AccountingSnapshotBuilder(ctx);
+    final AccountingSnapshotBuilder builder = new AccountingSnapshotBuilder(mapper, ctx);
 
     @Nested class MarketAccDiffTest {
         @Test void testAddToPosition() {
@@ -60,7 +61,7 @@ class AccountDiffProcessorTest {
             Assertions.assertTrue(result.get(0).isIn());
             Assertions.assertEquals(0, new BigDecimal("0.06088").compareTo(result.get(0).getPrice()));
             Assertions.assertEquals(SideType.BUY.getDir(), result.get(0).getDirection());
-            Assertions.assertTrue(new BigDecimal("0.37").compareTo(result.get(0).getRisk()) == 0);
+            Assertions.assertEquals(0, new BigDecimal("0.37").compareTo(result.get(0).getRisk()));
             Assertions.assertEquals("ARPAUSDT", result.get(0).getSymbol());
         }
 
@@ -167,13 +168,13 @@ class AccountDiffProcessorTest {
             }
 
             @Test void moveTp() {
-
+                //TODO:
             }
             @Test void killTp() {
-
+                //TODO:
             }
             @Test void closeAndKillTp() {
-
+                //TODO:
             }
         }
         @Nested class LimitAccDiffTest {
@@ -188,7 +189,7 @@ class AccountDiffProcessorTest {
                 Assertions.assertTrue(result.get(0).isIn());
                 Assertions.assertEquals(0, new BigDecimal("6.00").compareTo(result.get(0).getPrice()));
                 Assertions.assertEquals(SideType.BUY.getDir(), result.get(0).getDirection());
-                Assertions.assertTrue(new BigDecimal("0.17").compareTo(result.get(0).getRisk()) == 0);
+                Assertions.assertEquals(0, new BigDecimal("0.17").compareTo(result.get(0).getRisk()));
                 Assertions.assertEquals("TONUSDT", result.get(0).getSymbol());
             }
 
@@ -245,8 +246,10 @@ class AccountDiffProcessorTest {
         }
 
         @Test void closeWithoutKillingTp() {
-
+            //TODO:
+            Assertions.assertTrue(true);
         }
+
         @Test void openWithoutKillingLmt() {
             AccountingSnapshot old = build("pend/lmt/3balance0.json", "pend/lmt/3order0.json");
             AccountingSnapshot now = build("pend/lmt/3balance1.json", "pend/lmt/3order1.json");

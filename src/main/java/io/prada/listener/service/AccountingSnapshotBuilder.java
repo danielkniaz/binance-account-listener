@@ -3,6 +3,7 @@ package io.prada.listener.service;
 import static java.math.BigDecimal.ZERO;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.prada.listener.dto.accounting.AccountingConsolidatedSymbolInfo;
 import io.prada.listener.dto.accounting.AccountingOrder;
@@ -17,12 +18,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class AccountingSnapshotBuilder {
+    private final ObjectMapper mapper;
     private final MathContext ctx;
 
     public AccountingSnapshot build(List<Pair<RequestType, ObjectNode>> pairs) {
@@ -69,6 +72,7 @@ public class AccountingSnapshotBuilder {
         return result;
     }
 
+    @SneakyThrows
     private void retrievePositions(Optional<JsonNode> positionsFromBalance, Map<String, AccountingConsolidatedSymbolInfo> result) {
         if (positionsFromBalance.isEmpty()) {
             throw new IllegalArgumentException("balance -> must exist");
@@ -79,10 +83,11 @@ public class AccountingSnapshotBuilder {
         for (JsonNode node : positionsFromBalance.get()) {
             String symbol = node.get("symbol").asText();
             result.computeIfAbsent(symbol, s -> new AccountingConsolidatedSymbolInfo().setSymbol(s))
-                .setPosition(new AccountingPosition(node));
+                .setPosition(mapper.treeToValue(node, AccountingPosition.class));
         }
     }
 
+    @SneakyThrows
     private void retrieveOrders(Optional<JsonNode> orders, Map<String, AccountingConsolidatedSymbolInfo> result) {
         if (orders.isEmpty()) {
             throw new IllegalArgumentException("orders must exist");
@@ -93,7 +98,7 @@ public class AccountingSnapshotBuilder {
         for (JsonNode node : orders.get()) {
             String symbol = node.get("symbol").asText();
             result.computeIfAbsent(symbol, s -> new AccountingConsolidatedSymbolInfo().setSymbol(s))
-                .getOrders().add(new AccountingOrder(node));
+                .getOrders().add(mapper.treeToValue(node, AccountingOrder.class));
         }
     }
 }
