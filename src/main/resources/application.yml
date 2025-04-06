@@ -14,16 +14,19 @@ settings:
   publisher:
     amq: false
     telegram: false
+
 telegram:
   botToken: 123456:ABC-DEF1234ghIjk-zyx57W21qio9
   chatId: -1001234567890
 
 server:
   port: 8070
+  shutdown: graceful
 
 spring:
   application:
     name: "listener"
+  lifecycle.timeout-per-shutdown-phase: 30s
   datasource:
     url: "jdbc:postgresql://localhost:5432/publicdb"
     username: "admin"
