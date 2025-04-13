@@ -1,5 +1,6 @@
 package io.prada.listener.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.prada.listener.processor.TimeWindowEventProcessor;
 import io.prada.listener.service.ListenKeyHolder;
@@ -15,7 +16,8 @@ public class AppConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        return new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Bean
