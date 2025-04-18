@@ -3,7 +3,7 @@
 **Empower your Binance futures trading with real-time transparency and seamless signal forwarding.**  
 Whether you're a **trader** managing accounts or an **investor** following pro signals — this open-source project is for you.
 
-![License](https://img.shields.io/github/license/danielkniaz/prada)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 ![Binance](https://img.shields.io/badge/binance-futures-yellow)
@@ -20,7 +20,7 @@ Whether you're a **trader** managing accounts or an **investor** following pro s
   - **Partial** or **complete closes**
 
 - 🔄 **Queue Integration**  
-  Sends every event to a **message queue** (`ActiveMQ` or `Kafka`) for:
+  Sends every event to a **message queue** (`ActiveMQ`, will add `Kafka` later) for:
   - Third-party integration (e.g., trade copier systems)
   - Custom dashboards or analytics
   - Audit logs and downstream processing
@@ -30,41 +30,6 @@ Whether you're a **trader** managing accounts or an **investor** following pro s
   - Current open positions
   - Live SL/TP levels
   - Position sizes and direction
-
----
-
-## 🚀 Getting Started
-
-### 1. Configure the App
-
-Edit the `application.yml` file:
-
-```yaml
-telegram:
-  enabled: true
-  botToken: YOUR_BOT_TOKEN
-  chatId: YOUR_CHAT_ID
-
-binance:
-  apiKey: YOUR_BINANCE_API_KEY
-  secretKey: YOUR_BINANCE_SECRET_KEY
-
-queue:
-  enabled: true
-  type: kafka  # or amq
-  url: YOUR_QUEUE_URL
-
-database:
-  url: jdbc:postgresql://localhost:5432/your_db
-  username: your_user
-  password: your_pass
-
-### 2. Build and deploy
-
-mvn clean install
-docker build -t binance-signal-broadcaster .
-docker run -d -p 8080:8080 binance-signal-broadcaster
-
 
 
 ## ⚠️ Privacy Note
@@ -100,4 +65,40 @@ This project is licensed under the MIT License. See [LICENSE](https://github.com
 
 Stay transparent. Stay connected.  
 **Happy trading 🚀**
+
+
+---
+
+## 🚀 Getting Started
+
+### 1. Configure the App
+
+Edit the `application.yml` file:
+
+```yaml
+telegram:
+  enabled: true
+  botToken: YOUR_BOT_TOKEN
+  chatId: YOUR_CHAT_ID
+
+binance:
+  apiKey: YOUR_BINANCE_API_KEY
+  secretKey: YOUR_BINANCE_SECRET_KEY
+
+queue:
+  enabled: true
+  type: kafka  # or amq
+  url: YOUR_QUEUE_URL
+
+database:
+  url: jdbc:postgresql://localhost:5432/your_db
+  username: your_user
+  password: your_pass```
+
+### 2. Build and deploy
+
+mvn clean install
+docker build -t binance-signal-broadcaster .
+docker run -d -p 8080:8080 binance-signal-broadcaster
+
 
