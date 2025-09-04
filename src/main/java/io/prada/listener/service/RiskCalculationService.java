@@ -42,7 +42,7 @@ public class RiskCalculationService {
     }
 
     public BigDecimal computeEntryRisk(AccountingOrder order, AccountingSnapshot snapShot) {
-        return computeRiskFromAmnt(order.getOriginalQty().multiply(order.getPrice(), ctx), snapShot);
+        return computeRiskFromAmnt(order.getOriginalQty().multiply(order.getPrice().add(order.getStopPrice()), ctx), snapShot);
     }
 
     public BigDecimal computeEntryRisk(AccountingPosition position, AccountingSnapshot snapShot) {

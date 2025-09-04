@@ -84,6 +84,7 @@ class RiskCalculationServiceTest {
        AccountingOrder order = new AccountingOrder();
        order.setOriginalQty(new BigDecimal("1.6"));
        order.setPrice(new BigDecimal("6"));
+       order.setStopPrice(new BigDecimal("0"));
        AccountingSnapshot snapshot = new AccountingSnapshot().setBalances(buildBalance());
        var risk = unit.computeEntryRisk(order, snapshot);
        Assertions.assertTrue(0.15 < risk.doubleValue());
