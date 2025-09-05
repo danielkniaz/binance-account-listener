@@ -14,7 +14,7 @@ Whether you're a **trader** managing accounts or an **investor** following pro s
 
 - 📤 **Trade Action Broadcasting**  
   Forwards key Binance Futures trading actions to your **Telegram channel**, including:
-  - New **LIMIT** or **MARKET** orders
+  - New **LIMIT**, **STOP** or **MARKET** orders
   - **Stop Loss** / **Take Profit** updates
   - **Position adjustments**, **order moves**, **cancellations**
   - **Partial** or **complete closes**
@@ -27,7 +27,7 @@ Whether you're a **trader** managing accounts or an **investor** following pro s
 
 - 👁️ **Investor View / Mirror Monitoring**  
   Enables **investors** to track all trades in real-time, including:
-  - Current open positions
+  - Current open positions and pending orders
   - Live SL/TP levels
   - Position sizes and direction
 
@@ -99,6 +99,6 @@ database:
 
 mvn clean install
 docker build -t binance-signal-broadcaster .
-docker run -d -p 8080:8080 binance-signal-broadcaster
+docker run -d -p 8080:8080 -v /path-to-credentials/.env:/app/.env binance-signal-broadcaster
 
 
