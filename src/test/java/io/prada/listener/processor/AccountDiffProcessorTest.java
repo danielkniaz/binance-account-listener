@@ -177,6 +177,7 @@ class AccountDiffProcessorTest {
                 //TODO:
             }
         }
+
         @Nested class LimitAccDiffTest {
             @Test void newLimit() {
                 AccountingSnapshot old = build("pend/lmt/0balance.json", "pend/lmt/0order0.json");
@@ -227,6 +228,37 @@ class AccountDiffProcessorTest {
                 Assertions.assertTrue(result.get(0).isIn());
                 Assertions.assertEquals(SideType.BUY.getDir(), result.get(0).getDirection());
                 Assertions.assertEquals("NEIROUSDT", result.get(0).getSymbol());
+            }
+        }
+
+        @Nested class StopOrderAccDiffTest {
+            @Test void newStopOrder() {
+                AccountingSnapshot old = build("pend/stp/0balance.json", "pend/stp/0order.json");
+                AccountingSnapshot now = build("pend/stp/0balance.json", "pend/stp/1order.json");
+                List<Signal> result = unit.diff(now, old);
+
+                Assertions.assertEquals(1, result.size());
+                Signal signal = result.get(0);
+                Assertions.assertEquals(Action.NEW, signal.getAction());
+                Assertions.assertEquals(OrderType.STOP, signal.getType());
+                Assertions.assertEquals(1, signal.getDirection());
+                Assertions.assertTrue(signal.isIn());
+                Assertions.assertTrue(0 == new BigDecimal("14.").compareTo(result.get(0).getPrice()));
+                Assertions.assertTrue(0 == new BigDecimal("0.15").compareTo(result.get(0).getRisk()));
+                Assertions.assertEquals("TRUMPUSDT", result.get(0).getSymbol());
+            }
+            @Test void killStopOrder() {
+                AccountingSnapshot old = build("pend/stp/0balance.json", "pend/stp/1order.json");
+                AccountingSnapshot now = build("pend/stp/0balance.json", "pend/stp/0order.json");
+                List<Signal> result = unit.diff(now, old);
+
+                Assertions.assertEquals(1, result.size());
+                Signal signal = result.get(0);
+                Assertions.assertEquals(Action.KILL, signal.getAction());
+                Assertions.assertEquals(OrderType.STOP, signal.getType());
+                Assertions.assertTrue(signal.isIn());
+                Assertions.assertEquals(0, new BigDecimal("14.00").compareTo(signal.getPrice()));
+                Assertions.assertEquals("TRUMPUSDT", signal.getSymbol());
             }
         }
     }

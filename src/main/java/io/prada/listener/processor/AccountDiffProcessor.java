@@ -6,7 +6,6 @@ import io.prada.listener.dto.accounting.AccountingOrder;
 import io.prada.listener.dto.accounting.AccountingPosition;
 import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.dto.enums.Action;
-import io.prada.listener.dto.enums.CommandType;
 import io.prada.listener.dto.enums.OrderType;
 import io.prada.listener.service.RiskCalculationService;
 import java.math.BigDecimal;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -58,30 +56,38 @@ public class AccountDiffProcessor {
             checkPending(
                 newSymbols.stream().filter(AccountingOrder::isExit).filter(AccountingOrder::isStop).toList(),
                 oldSymbols.stream().filter(AccountingOrder::isExit).filter(AccountingOrder::isStop).toList(),
-                new Signal().setType(OrderType.STOP).setOut(true), CommandType.SL, now
+                new Signal().setType(OrderType.STOP).setOut(true), now
             ).ifPresent(result::add);
             checkPending(
                 newSymbols.stream().filter(AccountingOrder::isExit).filter(AccountingOrder::isLimit).toList(),
                 oldSymbols.stream().filter(AccountingOrder::isExit).filter(AccountingOrder::isLimit).toList(),
-                new Signal().setType(OrderType.LIMIT).setOut(true), CommandType.TP, now
+                new Signal().setType(OrderType.LIMIT).setOut(true), now
             ).ifPresent(result::add);
             checkPending(
                 newSymbols.stream().filter(AccountingOrder::isEntry).filter(AccountingOrder::isLimit).toList(),
                 oldSymbols.stream().filter(AccountingOrder::isEntry).filter(AccountingOrder::isLimit).toList(),
-                new Signal().setType(OrderType.LIMIT).setIn(true), CommandType.LMT, now
+                new Signal().setType(OrderType.LIMIT).setIn(true), now
+            ).ifPresent(result::add);
+            checkPending(
+                newSymbols.stream().filter(AccountingOrder::isEntry).filter(AccountingOrder::isStop).toList(),
+                oldSymbols.stream().filter(AccountingOrder::isEntry).filter(AccountingOrder::isStop).toList(),
+                new Signal().setType(OrderType.STOP).setIn(true), now
             ).ifPresent(result::add);
         }
         return result;
     }
 
-    private Optional<Signal> checkPending(List<AccountingOrder> now, List<AccountingOrder> old, Signal dummy, CommandType type, AccountingSnapshot snap) {
-        Optional<Signal> signal = standardFlowPending(now, old, dummy, type);
+    private Optional<Signal> checkPending(List<AccountingOrder> now, List<AccountingOrder> old, Signal template, AccountingSnapshot snap) {
+        Optional<Signal> signal = standardFlowPending(now, old, template);
         if (signal.isPresent()) {
             Stream.of(now, old).flatMap(Collection::stream).findFirst().ifPresent(order -> {
                 signal.get().setSymbol(order.getSymbol())
-                    .setPrice(pendingPrice(type, order))
-                    .setDirection(pendingDirection(type, order));
-                if (type == CommandType.LMT && signal.get().getAction() == Action.NEW) {
+                    .setPrice(pendingPrice(template, order))
+                    .setDirection(pendingDirection(template, order))
+                    .setType(template.getType())
+                    .setIn(template.isIn())
+                    .setOut(template.isOut());
+                if (template.isIn()  && signal.get().getAction() == Action.NEW) {
                     signal.get().setRisk(riskService.computeEntryRisk(order, snap));
                 }
             });
@@ -89,29 +95,31 @@ public class AccountDiffProcessor {
         return signal;
     }
 
-    private Optional<Signal> standardFlowPending(List<AccountingOrder> now, List<AccountingOrder> old, Signal signal, CommandType type) {
+    private Optional<Signal> standardFlowPending(List<AccountingOrder> now, List<AccountingOrder> old, Signal signal) {
         if (now.isEmpty() && old.isEmpty()) {
             return Optional.empty();
         }
-        validate(now, "new list of " + type.name());
-        validate(old, "new list of " + type.name());
+        validate(now, "new list of %s: in(%b)/out(%b)".formatted(signal.getType(), signal.isIn(), signal.isOut()));
+        validate(old, "new list of %s: in(%b)/out(%b)".formatted(signal.getType(), signal.isIn(), signal.isOut()));
         if (now.size() > old.size()) {
             return Optional.of(signal.setAction(Action.NEW));
         } else if (now.size() < old.size()) {
             return Optional.of(signal.setAction(Action.KILL));
-        } else if (pendingPrice(type, now.get(0)).compareTo(pendingPrice(type, old.get(0))) != 0) {
+        } else if (pendingPrice(signal, now.get(0)).compareTo(pendingPrice(signal, old.get(0))) != 0) {
             return Optional.of(signal.setAction(Action.MOVE));
         }
         return Optional.empty();
     }
 
-    private BigDecimal pendingPrice(CommandType type, AccountingOrder order) {
-        Function<AccountingOrder, BigDecimal> function = type == CommandType.LMT ? AccountingOrder::getPrice : AccountingOrder::getStopPrice;
-        return function.apply(order);
+    private BigDecimal pendingPrice(Signal signal, AccountingOrder order) {
+        if (signal.isIn() && signal.getType() == OrderType.LIMIT) {
+            return order.getPrice();
+        }
+        return order.getStopPrice();
     }
 
-    private int pendingDirection(CommandType type, AccountingOrder order) {
-        return CommandType.LMT == type ? order.direction() : 0;
+    private int pendingDirection(Signal signal, AccountingOrder order) {
+        return signal.isIn() ? order.direction() : 0;
     }
 
     private List<Signal> findMarketDiffs(AccountingSnapshot now, AccountingSnapshot old) {
