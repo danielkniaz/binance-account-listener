@@ -16,39 +16,35 @@ settings:
     telegram: false
 
 telegram:
-  botToken: 123456:ABC-DEF1234ghIjk-zyx57W21qio9
-  chatId: -1001234567890
+  botToken: ${TELEGRAM_BOT_TOKEN}
+  chatId: ${TELEGRAM_CHAT_ID}
 
 server:
   port: 8070
   shutdown: graceful
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: "listener"
   lifecycle.timeout-per-shutdown-phase: 30s
   datasource:
-    url: "jdbc:postgresql://localhost:5432/publicdb"
-    username: "admin"
-    password: "password"
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
-#    hikari:
-#      minimum-idle: 1
-#      maximum-pool-size: 1
-#      max-lifetime: 300000
-#      idle-timeout: 295000
-#      pool-name: bnb-chatBot
   jpa:
-#    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate.ddl-auto: none
     open-in-view: false
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: password
-    virtual-host: vhost
-    template.default-receive-queue: main-topic
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST}
+    template:
+      default-receive-queue: binance-fum
   flyway:
     enabled: false
 #    locations: classpath:db/migration
@@ -56,5 +52,5 @@ spring:
 #    validate-on-migrate: false
 
 bnb-config:
-  publicKey: "BNB_PUBLIC_KEY"
-  privateKey: "BNB_API_KEY"
+  publicKey: ${BINANCE_API_KEY}
+  privateKey: ${BINANCE_SECRET_KEY}

@@ -115,22 +115,17 @@ public class TimeWindowEventProcessor {
     }
 
     private void saveResponses(List<Pair<RequestType, ObjectNode>> responses, String mergedEvent) {
-        List<TradeInfoEntity> logs = responses.stream()
+        responses.stream()
             .map(pair -> buildLog(pair, mergedEvent))
             .filter(Objects::nonNull)
-            .toList();
-        if (logResponses) {
-            tradeInfoRepository.saveAll(logs);
-            return;
-        }
-        logs.forEach(e -> log.info("entity={}", e));
+            .forEach(l -> {
+                if (logResponses) tradeInfoRepository.save(l);
+                log.info("log entity = {}", l);
+            });
     }
 
     private List<Requester> requestersList() {
-        if (requestPositions) {
-            return requesters;
-        }
-        return requesters.stream().filter(req -> req.type() != RequestType.POSITION).toList();
+        return requestPositions ? requesters : requesters.stream().filter(req -> req.type()!=RequestType.POSITION).toList();
     }
 
     private Pair<RequestType, ObjectNode> buildNode(Requester requester) {
