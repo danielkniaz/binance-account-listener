@@ -10,7 +10,7 @@ settings:
   balanceType: "BALANCE"
   logs:
     bnb-events: true
-    bnb-responses: true
+#    bnb-responses: true
   publisher:
     amq: false
     telegram: false

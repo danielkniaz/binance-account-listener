@@ -1,10 +1,9 @@
 package io.prada.listener.dto.accounting;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.prada.listener.config.BigDecimalMathContextDeserializer;
+import com.binance.connector.client.derivatives_trading_usds_futures.rest.model.AllOrdersResponseInner;
 import io.prada.listener.dto.enums.SideType;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,28 +18,19 @@ public class AccountingOrder {
     private String symbol;
     private String status;
     private String clientOrderId;
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
     private BigDecimal price;
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
     private BigDecimal avgPrice;
-    @JsonProperty("origQty")
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
     private BigDecimal originalQty;
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
     private BigDecimal executedQty;
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
-    @JsonProperty("cumQuote") private BigDecimal cumulativeQty;
     private String timeInForce;
     private String type;
     private boolean reduceOnly;
     private boolean closePosition;
     private SideType side;
     private String positionSide;
-    @JsonDeserialize(using = BigDecimalMathContextDeserializer.class)
     private BigDecimal stopPrice;
     private String workingType;
     private boolean priceProtect;
-    @JsonProperty("origType") private String originalType;
     private String priceMatch;
     private String selfTradePreventionMode;
     private Long goodTillDate;
@@ -61,5 +51,30 @@ public class AccountingOrder {
     }
     public int direction() {
         return this.side.getDir();
+    }
+
+    public AccountingOrder(AllOrdersResponseInner entity, MathContext ctx) {
+        this.orderId = entity.getOrderId();
+        this.symbol = entity.getSymbol();
+        this.status = entity.getStatus();
+        this.clientOrderId = entity.getClientOrderId();
+        this.price = new BigDecimal(entity.getPrice(), ctx);
+        this.avgPrice = new BigDecimal(entity.getAvgPrice(), ctx);
+        this.originalQty = new BigDecimal(entity.getOrigQty(), ctx);
+        this.executedQty = new BigDecimal(entity.getExecutedQty(), ctx);
+        this.timeInForce = entity.getTimeInForce();
+        this.type = entity.getType();
+        this.reduceOnly = entity.getReduceOnly();
+        this.closePosition = entity.getClosePosition();
+        this.side = SideType.of(entity.getSide());
+        this.positionSide = entity.getPositionSide();
+        this.stopPrice = new BigDecimal(entity.getStopPrice(), ctx);
+        this.workingType = entity.getWorkingType();
+        this.priceProtect = entity.getPriceProtect();
+        this.priceMatch = entity.getPriceMatch();
+        this.selfTradePreventionMode = entity.getSelfTradePreventionMode();
+        this.goodTillDate = entity.getGoodTillDate();
+        this.time = entity.getTime();
+        this.updateTime = entity.getUpdateTime();
     }
 }

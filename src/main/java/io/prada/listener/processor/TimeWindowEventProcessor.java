@@ -1,20 +1,19 @@
 package io.prada.listener.processor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.prada.listener.dto.AccountResponse;
+import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.repository.EventRepository;
 import io.prada.listener.repository.TradeInfoRepository;
 import io.prada.listener.repository.model.EventEntity;
 import io.prada.listener.repository.model.TradeInfoEntity;
+import io.prada.listener.service.AccountingSnapshotBuilder;
+import io.prada.listener.service.BinanceAccountDataRequester;
 import io.prada.listener.service.EventDetectionService;
 import io.prada.listener.service.SkipEventService;
-import io.prada.listener.service.request.RequestType;
-import io.prada.listener.service.request.Requester;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -22,9 +21,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,9 +36,10 @@ public class TimeWindowEventProcessor {
     private final ObjectMapper mapper;
     private final EventRepository eventRepository;
     private final SkipEventService skipEventService;
-    private final List<Requester> requesters;
     private final TradeInfoRepository tradeInfoRepository;
     private final EventDetectionService eventDetectionService;
+    private final BinanceAccountDataRequester accountDataRequester;
+    private final AccountingSnapshotBuilder snapshotBuilder;
 
     private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -47,10 +47,6 @@ public class TimeWindowEventProcessor {
 
     @Value("${settings.logs.bnb-events}")
     private boolean logEvents;
-    @Value("${settings.logs.bnb-responses}")
-    private boolean logResponses;
-    @Value("${settings.use-position-request}")
-    private boolean requestPositions;
 
     public void onMessage(String message) {
         boolean importantEvent = skipEventService.isImportantEvent(message);
@@ -75,15 +71,22 @@ public class TimeWindowEventProcessor {
         }
     }
 
+    @SneakyThrows
     private void doProcessBatch() {
         List<String> events = drainQueue();
         if (events.isEmpty()) {
             return;
         }
         String mergedEvent = mergeEvents(events);
-        List<Pair<RequestType, ObjectNode>> responses = buildResponses(mergedEvent);
-        saveResponses(responses, mergedEvent);
-        eventDetectionService.analyze(responses, mergedEvent);
+        AccountResponse dto = accountDataRequester.collect();
+        if (dto == null) {
+            return; //need to know how often this happens before going further
+        }
+        AccountingSnapshot snapshot = snapshotBuilder.build(dto);
+        log.info("event = {}, snapshot={}", mergedEvent, snapshot);
+        tradeInfoRepository.save(new TradeInfoEntity().setData(mapper.writeValueAsString(snapshot)).setEvent(mergedEvent));
+
+        eventDetectionService.analyze(snapshot, mergedEvent);
     }
 
     private List<String> drainQueue() {
@@ -95,53 +98,12 @@ public class TimeWindowEventProcessor {
         return result;
     }
 
+    @SneakyThrows
     private String mergeEvents(List<String> events) {
         ArrayNode jsonNodes = mapper.createArrayNode();
         for (String event : events) {
-            try {
-                jsonNodes.add(mapper.readTree(event));
-            } catch (JsonProcessingException e) {
-                log.warn("skipping event={}",event);
-            }
+            jsonNodes.add(mapper.readTree(event));
         }
         return mapper.createObjectNode().set(EVENTS, jsonNodes).toString();
-    }
-
-    private List<Pair<RequestType, ObjectNode>> buildResponses(String mergedEvent) {
-        log.info("merged event={}", mergedEvent);
-        return requestersList().stream()
-            .map(this::buildNode)
-            .filter(Objects::nonNull).toList();
-    }
-
-    private void saveResponses(List<Pair<RequestType, ObjectNode>> responses, String mergedEvent) {
-        responses.stream()
-            .map(pair -> buildLog(pair, mergedEvent))
-            .filter(Objects::nonNull)
-            .forEach(l -> {
-                if (logResponses) tradeInfoRepository.save(l);
-                log.info("log entity = {}", l);
-            });
-    }
-
-    private List<Requester> requestersList() {
-        return requestPositions ? requesters : requesters.stream().filter(req -> req.type()!=RequestType.POSITION).toList();
-    }
-
-    private Pair<RequestType, ObjectNode> buildNode(Requester requester) {
-        ObjectNode value = requester.request();
-        return Objects.isNull(value) ? null : Pair.of(requester.type(), value);
-    }
-
-    private TradeInfoEntity buildLog(Pair<RequestType, ObjectNode> pair, String event) {
-        try {
-            return new TradeInfoEntity()
-                .setData(mapper.writeValueAsString(pair.getSecond()))
-                .setType(pair.getFirst())
-                .setEvent(event);
-        } catch (JsonProcessingException e) {
-            log.warn("cannot save json {}", pair.getSecond(), e);
-            return null;
-        }
     }
 }
