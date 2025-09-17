@@ -10,6 +10,7 @@ import io.prada.listener.service.ListenKeyHolder;
 import io.prada.listener.service.socket.UMFWSHolder;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.net.http.HttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,6 +21,11 @@ public class AppConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Bean
+    public HttpClient httpClient() {
+        return HttpClient.newHttpClient();
     }
 
     @Bean
