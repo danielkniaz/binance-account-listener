@@ -1,5 +1,8 @@
 package io.prada.listener.config;
 
+import com.binance.connector.client.common.configuration.ClientConfiguration;
+import com.binance.connector.client.common.configuration.SignatureConfiguration;
+import com.binance.connector.client.derivatives_trading_usds_futures.rest.api.DerivativesTradingUsdsFuturesRestApi;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.prada.listener.processor.TimeWindowEventProcessor;
@@ -35,5 +38,17 @@ public class AppConfig {
         UMFWSHolder result = new UMFWSHolder(processor, holder);
         result.init();
         return result;
+    }
+
+    @Bean
+    public DerivativesTradingUsdsFuturesRestApi binanceRestApi(BinanceKeyConfig keyConfig) {
+        SignatureConfiguration signatureConfiguration = new SignatureConfiguration();
+        signatureConfiguration.setApiKey(keyConfig.getPublicKey());
+        signatureConfiguration.setSecretKey(keyConfig.getPrivateKey());
+
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setUrl(BnbFUMLinks.bnbApiUrl);
+        clientConfiguration.setSignatureConfiguration(signatureConfiguration);
+        return new DerivativesTradingUsdsFuturesRestApi(clientConfiguration);
     }
 }

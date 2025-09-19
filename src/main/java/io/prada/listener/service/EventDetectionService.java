@@ -2,19 +2,16 @@ package io.prada.listener.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.prada.listener.dto.Signal;
 import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.processor.AccountDiffProcessor;
 import io.prada.listener.processor.TimeWindowEventProcessor;
 import io.prada.listener.service.publisher.MessagePublisher;
-import io.prada.listener.service.request.RequestType;
 import io.prada.listener.service.socket.UMFWebsocketClientImpl;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,26 +30,19 @@ public class EventDetectionService {
         return builder.copy(snapshot);
     }
 
-    public void analyze(List<Pair<RequestType, ObjectNode>> input, String messages) {
-        AccountingSnapshot now = null;
-        try {
-            now = builder.build(input);
-            if (isOnConnect(messages)) {
-                log.debug("skipping initial message");
-                this.snapshot = now;
-                return;
-            }
-            List<Signal> signals = processor.diff(now, snapshot);
-            signals = processor.suppress(signals);
-            if (!signals.isEmpty()) {
-                signalService.process(signals);
-                signals.forEach(this::sendSignal);
-            }
-        } catch (Exception e) {
-            log.warn("exception {}", e.getMessage(), e);
-        } finally {
-            this.snapshot = now;
+    public void analyze(AccountingSnapshot fresh, String messages) {
+        if (isOnConnect(messages)) {
+            log.debug("skipping initial message");
+            this.snapshot = fresh;
+            return;
         }
+        List<Signal> signals = processor.diff(fresh, snapshot);
+        signals = processor.suppress(signals);
+        if (!signals.isEmpty()) {
+            signalService.process(signals);
+            signals.forEach(this::sendSignal);
+        }
+        this.snapshot = fresh;
     }
 
     @SneakyThrows

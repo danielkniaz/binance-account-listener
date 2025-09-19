@@ -50,8 +50,8 @@ public class AccountDiffProcessor {
         List<Signal> result = new ArrayList<>();
         Set<String> symbols = mergeSymbols(now, old);
         for (String symbol : symbols) {
-            var newSymbols = now.getSymbolSnapShots().getOrDefault(symbol, new AccountingConsolidatedSymbolInfo()).getOrders();
-            var oldSymbols = old.getSymbolSnapShots().getOrDefault(symbol, new AccountingConsolidatedSymbolInfo()).getOrders();
+            var newSymbols = now.getSymbolSnapShots().getOrDefault(symbol, new AccountingConsolidatedSymbolInfo(symbol)).getOrders();
+            var oldSymbols = old.getSymbolSnapShots().getOrDefault(symbol, new AccountingConsolidatedSymbolInfo(symbol)).getOrders();
 
             checkPending(
                 newSymbols.stream().filter(AccountingOrder::isExit).filter(AccountingOrder::isStop).toList(),

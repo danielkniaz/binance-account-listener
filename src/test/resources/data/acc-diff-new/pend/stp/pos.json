@@ -1,0 +1,21 @@
+[
+  {
+    "symbol": "TRUMPUSDT",
+    "positionAmt": "5.33",
+    "entryPrice": "13.98433771107",
+    "breakEvenPrice": "13.99132987993",
+    "markPrice": "8.338688636",
+    "unRealizedProfit": "-30.10931929",
+    "marginType": "cross",
+    "isolatedMargin": "0",
+    "isAutoAddMargin": false,
+    "positionSide": "BOTH",
+    "notional": "44.42720070",
+    "isolatedWallet": "0",
+    "updateTime": 1748799732843,
+    "isolated": false,
+    "leverage": "20",
+    "maxNotionalValue": "200000",
+    "liquidationPrice": "0"
+  }
+]

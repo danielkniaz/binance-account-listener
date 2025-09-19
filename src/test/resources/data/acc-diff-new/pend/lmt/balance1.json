@@ -1,0 +1,39 @@
+{
+  "feeTier": 0,
+  "canTrade": true,
+  "canDeposit": true,
+  "canWithdraw": true,
+  "feeBurn": false,
+  "tradeGroupId": -1,
+  "updateTime": 0,
+  "multiAssetsMargin": false,
+  "totalInitialMargin": "9.64463393",
+  "totalMaintMargin": "2.45271966",
+  "totalWalletBalance": "275.78465262",
+  "totalUnrealizedProfit": "-31.70425306",
+  "totalMarginBalance": "244.08039956",
+  "totalPositionInitialMargin": "8.66567393",
+  "totalOpenOrderInitialMargin": "0.97896000",
+  "totalCrossWalletBalance": "275.78465262",
+  "totalCrossUnPnl": "-31.70425306",
+  "availableBalance": "234.33340699",
+  "maxWithdrawAmount": "234.33340699",
+  "assets": [
+    {
+      "asset": "USDT",
+      "walletBalance": "275.78465262",
+      "unrealizedProfit": "-31.70425306",
+      "marginBalance": "244.08039956",
+      "maintMargin": "2.45271966",
+      "initialMargin": "9.64463393",
+      "positionInitialMargin": "8.66567393",
+      "openOrderInitialMargin": "0.97896000",
+      "maxWithdrawAmount": "234.33340699",
+      "crossWalletBalance": "275.78465262",
+      "crossUnPnl": "-31.70425306",
+      "availableBalance": "234.33340699",
+      "marginAvailable": true,
+      "updateTime": 1733911265700
+    }
+  ]
+}

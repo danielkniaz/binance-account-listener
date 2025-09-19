@@ -1,8 +1,11 @@
 package io.prada.listener.processor;
 
+import com.binance.connector.client.derivatives_trading_usds_futures.rest.model.AccountInformationV2Response;
+import com.binance.connector.client.derivatives_trading_usds_futures.rest.model.AllOrdersResponseInner;
+import com.binance.connector.client.derivatives_trading_usds_futures.rest.model.PositionInformationV2ResponseInner;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.prada.listener.dto.AccountResponse;
 import io.prada.listener.dto.Signal;
 import io.prada.listener.dto.accounting.AccountingSnapshot;
 import io.prada.listener.dto.enums.Action;
@@ -11,7 +14,6 @@ import io.prada.listener.dto.enums.OrderType;
 import io.prada.listener.dto.enums.SideType;
 import io.prada.listener.service.AccountingSnapshotBuilder;
 import io.prada.listener.service.RiskCalculationService;
-import io.prada.listener.service.request.RequestType;
 import io.prada.listener.testUtils.TestFileUtils;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -21,22 +23,29 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.util.Pair;
 
 class AccountDiffProcessorTest {
-    private static final String PREFIX = "data/account-diff/";
+    private static final String PREFIX = "data/acc-diff-new/";
 
     final MathContext ctx = new MathContext(8, RoundingMode.HALF_EVEN);
     final ObjectMapper mapper = new ObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     final AccountDiffProcessor unit = new AccountDiffProcessor(
         new RiskCalculationService(ctx, TestFileUtils.appSettings(BalanceType.BALANCE)), ctx);
-    final AccountingSnapshotBuilder builder = new AccountingSnapshotBuilder(mapper, ctx);
+    final AccountingSnapshotBuilder builder = new AccountingSnapshotBuilder(ctx);
 
-    @Nested class MarketAccDiffTest {
-        @Test void testAddToPosition() {
-            AccountingSnapshot old = build("mkt-diff/add/balance0.json", "mkt-diff/add/order.json");
-            AccountingSnapshot now = build("mkt-diff/add/balance1.json", "mkt-diff/add/order.json");
+
+    @Nested class NewFormatAccDiffMarketTest {
+        @Test void testAddToPositionWithNewFormat() {
+            AccountingSnapshot old = buildFromApiResponses(
+                "mkt/add/balance0.json",
+                "mkt/add/pos0.json",
+                "mkt/add/order.json");
+
+            AccountingSnapshot now = buildFromApiResponses(
+                "mkt/add/balance1.json",
+                "mkt/add/pos1.json",
+                "mkt/add/order.json");
             List<Signal> result = unit.diff(now, old);
 
             Assertions.assertEquals(1, result.size());
@@ -50,9 +59,37 @@ class AccountDiffProcessorTest {
             Assertions.assertEquals("PHBUSDT", result.get(0).getSymbol());
         }
 
-        @Test void testToNewPosition() {
-            AccountingSnapshot old = build("mkt-diff/open/balance0.json", "mkt-diff/open/order.json");
-            AccountingSnapshot now = build("mkt-diff/open/balance1.json", "mkt-diff/open/order.json");
+        @Test void testClose() {
+            AccountingSnapshot old = buildFromApiResponses(
+                "mkt/close/balance0.json",
+                "mkt/close/pos0.json",
+                "mkt/close/order0.json");
+
+            AccountingSnapshot now = buildFromApiResponses(
+                "mkt/close/balance1.json",
+                "mkt/close/pos1.json",
+                "mkt/close/order1.json");
+            List<Signal> result = unit.diff(now, old);
+
+            Assertions.assertEquals(2, result.size());
+            Assertions.assertEquals(Action.KILL, result.get(1).getAction());
+            Assertions.assertEquals(OrderType.MARKET, result.get(1).getType());
+            Assertions.assertTrue(result.get(1).isOut());
+            Assertions.assertEquals(SideType.BUY.getDir(), result.get(1).getDirection());
+            Assertions.assertEquals("TURBOUSDT", result.get(1).getSymbol());
+        }
+
+        @Test
+        void testToNewPosition() {
+            AccountingSnapshot old = buildFromApiResponses(
+                "mkt/open/balance0.json",
+                "mkt/open/pos0.json",
+                "mkt/open/order.json");
+
+            AccountingSnapshot now = buildFromApiResponses(
+                "mkt/open/balance1.json",
+                "mkt/open/pos1.json",
+                "mkt/open/order.json");
             List<Signal> result = unit.diff(now, old);
 
             Assertions.assertEquals(1, result.size());
@@ -66,8 +103,15 @@ class AccountDiffProcessorTest {
         }
 
         @Test void testToPartialClose() {
-            AccountingSnapshot old = build("mkt-diff/partial/balance0.json", "mkt-diff/partial/order.json");
-            AccountingSnapshot now = build("mkt-diff/partial/balance1.json", "mkt-diff/partial/order.json");
+            AccountingSnapshot old = buildFromApiResponses(
+                "mkt/partial/balance0.json",
+                "mkt/partial/pos0.json",
+                "mkt/partial/order.json");
+
+            AccountingSnapshot now = buildFromApiResponses(
+                "mkt/partial/balance1.json",
+                "mkt/partial/pos1.json",
+                "mkt/partial/order.json");
             List<Signal> result = unit.diff(now, old);
 
             Assertions.assertEquals(1, result.size());
@@ -81,29 +125,21 @@ class AccountDiffProcessorTest {
             Assertions.assertEquals(SideType.BUY.getDir(), result.get(0).getDirection());
             Assertions.assertEquals("ARPAUSDT", result.get(0).getSymbol());
         }
-
-        @Test //no exit price
-        void testToClose() {
-            AccountingSnapshot old = build("mkt-diff/close/balance0.json", "mkt-diff/close/order0.json");
-            AccountingSnapshot now = build("mkt-diff/close/balance1.json", "mkt-diff/close/order1.json");
-            List<Signal> result = unit.diff(now, old);
-
-            Assertions.assertEquals(2, result.size());
-            Assertions.assertEquals(Action.KILL, result.get(1).getAction());
-            Assertions.assertEquals(OrderType.MARKET, result.get(1).getType());
-            Assertions.assertTrue(result.get(1).isOut());
-            Assertions.assertEquals(SideType.BUY.getDir(), result.get(1).getDirection());
-            Assertions.assertEquals("TURBOUSDT", result.get(1).getSymbol());
-            //TODO: do not have exit price, probably need events
-        }
     }
 
-    @Nested class PendingAccDiffTest {
+    @Nested class NewFormatAccDiffPendingTest {
 
         @Nested class StopLossAccDiffTest {
             @Test void newStopLoss() {
-                AccountingSnapshot old = build("pend/sl/balance.json", "pend/sl/0order0.json");
-                AccountingSnapshot now = build("pend/sl/balance.json", "pend/sl/0order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order0_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order0_1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -115,8 +151,15 @@ class AccountDiffProcessorTest {
             }
 
             @Test void moveStopLoss() {
-                AccountingSnapshot old = build("pend/sl/balance.json", "pend/sl/1order0.json");
-                AccountingSnapshot now = build("pend/sl/balance.json", "pend/sl/1order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order1_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order1_1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(Action.MOVE, result.get(0).getAction());
@@ -127,8 +170,15 @@ class AccountDiffProcessorTest {
             }
 
             @Test void killStopLoss() {
-                AccountingSnapshot old = build("pend/sl/balance.json", "pend/sl/2order0.json");
-                AccountingSnapshot now = build("pend/sl/balance.json", "pend/sl/2order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order2_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/sl/balance.json",
+                    "pend/sl/pos.json",
+                    "pend/sl/order2_1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -140,8 +190,15 @@ class AccountDiffProcessorTest {
             }
 
             @Test void closeAndKillStoploss() {
-                AccountingSnapshot old = build("mkt-diff/close/balance0.json", "mkt-diff/close/order0.json");
-                AccountingSnapshot now = build("mkt-diff/close/balance1.json", "mkt-diff/close/order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "mkt/close/balance0.json",
+                    "mkt/close/pos0.json",
+                    "mkt/close/order0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "mkt/close/balance1.json",
+                    "mkt/close/pos1.json",
+                    "mkt/close/order1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(2, result.size());
@@ -155,8 +212,15 @@ class AccountDiffProcessorTest {
 
         @Nested class TakeProfitAccDiffTest {
             @Test void newTp() {
-                AccountingSnapshot old = build("pend/tp/balance.json", "pend/tp/0order0.json");
-                AccountingSnapshot now = build("pend/tp/balance.json", "pend/tp/0order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/tp/balance.json",
+                    "pend/tp/pos.json",
+                    "pend/tp/order0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/tp/balance.json",
+                    "pend/tp/pos.json",
+                    "pend/tp/order1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -180,8 +244,15 @@ class AccountDiffProcessorTest {
 
         @Nested class LimitAccDiffTest {
             @Test void newLimit() {
-                AccountingSnapshot old = build("pend/lmt/0balance.json", "pend/lmt/0order0.json");
-                AccountingSnapshot now = build("pend/lmt/0balance.json", "pend/lmt/0order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/lmt/balance0.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order0_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/lmt/balance0.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order0_1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -195,8 +266,15 @@ class AccountDiffProcessorTest {
             }
 
             @Test void moveLimit() {
-                AccountingSnapshot old = build("pend/lmt/1balance.json", "pend/lmt/1order0.json");
-                AccountingSnapshot now = build("pend/lmt/1balance.json", "pend/lmt/1order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/lmt/balance1.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order1_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/lmt/balance1.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order1_1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(Action.MOVE, result.get(0).getAction());
@@ -207,10 +285,17 @@ class AccountDiffProcessorTest {
             }
 
             @Test void killLimit() {
-                AccountingSnapshot old = build("pend/lmt/1balance.json", "pend/lmt/2order0.json");
-                AccountingSnapshot now = build("pend/lmt/1balance.json", "pend/lmt/2order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/lmt/balance1.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order2_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/lmt/balance1.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order2_1.json");
                 List<Signal> result = unit.diff(now, old);
-                System.out.println(result);
+
                 Assertions.assertEquals(Action.KILL, result.get(0).getAction());
                 Assertions.assertEquals(OrderType.LIMIT, result.get(0).getType());
                 Assertions.assertTrue(result.get(0).isIn());
@@ -219,10 +304,17 @@ class AccountDiffProcessorTest {
             }
 
             @Test void openAndKillLimit() {
-                AccountingSnapshot old = build("pend/lmt/3balance0.json", "pend/lmt/3order0.json");
-                AccountingSnapshot now = build("pend/lmt/3balance1.json", "pend/lmt/3order1.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/lmt/balance3.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order3_0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/lmt/balance3.json",
+                    "pend/lmt/pos0.json",
+                    "pend/lmt/order3_1.json");
                 List<Signal> result = unit.diff(now, old);
-                Assertions.assertEquals(2, result.size());
+                Assertions.assertEquals(1, result.size());
                 Assertions.assertEquals(Action.KILL, result.get(0).getAction());
                 Assertions.assertEquals(OrderType.LIMIT, result.get(0).getType());
                 Assertions.assertTrue(result.get(0).isIn());
@@ -233,8 +325,15 @@ class AccountDiffProcessorTest {
 
         @Nested class StopOrderAccDiffTest {
             @Test void newStopOrder() {
-                AccountingSnapshot old = build("pend/stp/0balance.json", "pend/stp/0order.json");
-                AccountingSnapshot now = build("pend/stp/0balance.json", "pend/stp/1order.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/stp/balance.json",
+                    "pend/stp/pos.json",
+                    "pend/stp/order0.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/stp/balance.json",
+                    "pend/stp/pos.json",
+                    "pend/stp/order1.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -248,8 +347,15 @@ class AccountDiffProcessorTest {
                 Assertions.assertEquals("TRUMPUSDT", result.get(0).getSymbol());
             }
             @Test void killStopOrder() {
-                AccountingSnapshot old = build("pend/stp/0balance.json", "pend/stp/1order.json");
-                AccountingSnapshot now = build("pend/stp/0balance.json", "pend/stp/0order.json");
+                AccountingSnapshot old = buildFromApiResponses(
+                    "pend/stp/balance.json",
+                    "pend/stp/pos.json",
+                    "pend/stp/order1.json");
+
+                AccountingSnapshot now = buildFromApiResponses(
+                    "pend/stp/balance.json",
+                    "pend/stp/pos.json",
+                    "pend/stp/order0.json");
                 List<Signal> result = unit.diff(now, old);
 
                 Assertions.assertEquals(1, result.size());
@@ -263,10 +369,17 @@ class AccountDiffProcessorTest {
         }
     }
 
-    @Nested class SuppressAccDiffTest {
+    @Nested class NewFormatSuppressAccDiffTest {
         @Test void closeWithoutKillingSl() {
-            AccountingSnapshot old = build("mkt-diff/close/balance0.json", "mkt-diff/close/order0.json");
-            AccountingSnapshot now = build("mkt-diff/close/balance1.json", "mkt-diff/close/order1.json");
+            AccountingSnapshot old = buildFromApiResponses(
+                "mkt/close/balance0.json",
+                "mkt/close/pos0.json",
+                "mkt/close/order0.json");
+
+            AccountingSnapshot now = buildFromApiResponses(
+                "mkt/close/balance1.json",
+                "mkt/close/pos1.json",
+                "mkt/close/order1.json");
             List<Signal> result = unit.diff(now, old);
             result = unit.suppress(result);
 
@@ -283,8 +396,14 @@ class AccountDiffProcessorTest {
         }
 
         @Test void openWithoutKillingLmt() {
-            AccountingSnapshot old = build("pend/lmt/3balance0.json", "pend/lmt/3order0.json");
-            AccountingSnapshot now = build("pend/lmt/3balance1.json", "pend/lmt/3order1.json");
+            AccountingSnapshot old = buildFromApiResponses(
+                "pend/lmt/balance3.json",
+                "pend/lmt/pos0.json",
+                "pend/lmt/order3_0.json");
+            AccountingSnapshot now = buildFromApiResponses(
+                "pend/lmt/balance3.json",
+                "pend/lmt/pos1.json",
+                "pend/lmt/order3_1.json");
             List<Signal> result = unit.diff(now, old);
             result = unit.suppress(result);
 
@@ -301,12 +420,14 @@ class AccountDiffProcessorTest {
     }
 
     @SneakyThrows
-    private AccountingSnapshot build(String balance, String orders) {
-        var r1 = Pair.of(RequestType.BALANCE, (ObjectNode) mapper.readTree(
-            TestFileUtils.load(PREFIX + balance)));
-        var r2 = Pair.of(RequestType.ORDER, (ObjectNode) mapper
-            .createObjectNode().set(RequestType.ORDER.name(), mapper.readTree(
-                TestFileUtils.load(PREFIX + orders)).get(RequestType.ORDER.name())));
-        return builder.build(List.of(r1, r2));
+    private AccountingSnapshot buildFromApiResponses(String accountInfoFile, String positionsFile, String ordersFile) {
+        AccountInformationV2Response accountInfo = mapper.readValue(
+            TestFileUtils.load(PREFIX + accountInfoFile), AccountInformationV2Response.class);
+        PositionInformationV2ResponseInner[] positions = mapper.readValue(
+            TestFileUtils.load(PREFIX + positionsFile), PositionInformationV2ResponseInner[].class);
+        AllOrdersResponseInner[] orders = mapper.readValue(
+            TestFileUtils.load(PREFIX + ordersFile), AllOrdersResponseInner[].class);
+        AccountResponse response = new AccountResponse(accountInfo, List.of(positions), List.of(orders));
+        return builder.build(response);
     }
 }
